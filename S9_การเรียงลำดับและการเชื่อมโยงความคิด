@@ -1,0 +1,85 @@
+import requests
+import json
+import time
+
+# ---------------------- ตั้งค่า ----------------------
+url = "https://api.aiforthai.in.th/qaiapp"
+headers = {
+    'Content-Type': "application/json",
+    'apikey': "zyHC3BNtLiesIuTj2UMlQd8DhrVXBxzM",
+}
+
+# คำตอบของนักเรียน
+student_answer = """เห็นด้วย เพราะไม่ให้คนส่วนใหญ่ตกเป็นเหยื่อทางการตลาด
+การขายของออนไลน์แบบช่อโกง
+การใช้รูปภาพของบุคคลอื่น
+การอ้างว่าเป็นบุคคลอื่นเพื่อหลอกเอาเงิน
+การเล่นการพนันในสื่อออนไลน์"""
+
+# คำถาม + เงื่อนไขการตรวจ
+questions = [
+    {"question": "เป็นไปตามเหตุและผล ตอบ ใช่ หรือ ไม่ใช่",
+     "check": lambda ans: ans.strip() == "ใช่"},
+    {"question": "มีการเรียงลำดับความคิด",
+     "check": lambda ans: not ans.strip().startswith("ไม่มี")},
+    {"question": "มีเนื้อความซ้ำ",
+     "check": lambda ans: "ไม่มี" in ans.strip()},
+    {"question": "มีเนื้อความไม่สัมพันธ์กัน",
+     "check": lambda ans: "ไม่มี" in ans.strip()},
+    {"question": "มีเนื้อความขาด",
+     "check": lambda ans: "ไม่มี" in ans.strip()},
+]
+
+results = []
+wrong_count = 0
+
+# ---------------------- รันทีละคำถาม ----------------------
+for q in questions:
+    while True:
+        payload = json.dumps({
+            "question": q["question"],
+            "document": student_answer
+        })
+
+        try:
+            response = requests.post(url, data=payload, headers=headers, timeout=10)
+        except requests.exceptions.RequestException:
+            time.sleep(1)
+            continue
+
+        if response.status_code == 200:
+            result = response.json()
+            answer = result.get("answer", "").strip()
+
+            if answer and answer.lower() not in ["", "ไม่พบคำตอบ"]:
+                is_correct = q["check"](answer)
+                results.append({
+                    "question": q["question"],
+                    "answer": answer,
+                    "correct": is_correct
+                })
+                if not is_correct:
+                    wrong_count += 1
+                break
+            else:
+                time.sleep(0.5)
+        else:
+            time.sleep(0.5)
+
+# ---------------------- คำนวณคะแนน ----------------------
+if wrong_count == 0:
+    score = 3
+elif wrong_count == 1:
+    score = 2
+elif wrong_count == 2:
+    score = 1
+else:
+    score = 0
+
+# ---------------------- แสดงผลเป็น JSON ----------------------
+output = {
+    "results": results,
+    "score": score
+}
+
+print(json.dumps(output, ensure_ascii=False, indent=2))
