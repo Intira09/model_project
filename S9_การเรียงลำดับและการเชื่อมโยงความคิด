@@ -6,7 +6,7 @@ import time
 url = "https://api.aiforthai.in.th/qaiapp"
 headers = {
     'Content-Type': "application/json",
-    'apikey': "zyHC3BNtLiesIuTj2UMlQd8DhrVXBxzM",
+    'apikey': "", # add Apikey
 }
 
 # คำตอบของนักเรียน
