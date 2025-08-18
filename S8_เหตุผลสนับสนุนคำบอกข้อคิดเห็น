@@ -261,7 +261,18 @@ def calculate_score(results, copied_article_threshold=0.90):
     return {"score": 2, "details": "ผ่านเกณฑ์หลักบางส่วน (เหตุผล/ใจความ/ความสอดคล้อง) แต่ยังไม่ครบถ้วน"}
 
 # ------------------------- Run -------------------------
-if __name__ == "__main__":
-    results = evaluate_student_answer(student_answer, reference_article, main_idea_keywords, example_keywords)
-    score = calculate_score(results)
-    print(f"\nคะแนนที่ได้: {score}")
+def evaluate_and_score(student_answer, reference_article, main_idea_keywords, example_keywords):
+    results = evaluate_student_answer(
+        student_answer,
+        reference_article,
+        main_idea_keywords,
+        example_keywords
+    )
+    score_info = calculate_score(results)
+    final_output = {
+        "results": results,
+        "score_info": score_info
+    }
+    return json.dumps(final_output, ensure_ascii=False, indent=2)
+
+print(evaluate_and_score(student_answer, reference_article, main_idea_keywords, example_keywords))
